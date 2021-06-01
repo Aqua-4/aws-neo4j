@@ -5,4 +5,5 @@ TODO:
 - [ ] lambda function to query 
 
 
-* cypher connection $neo4j-home> bin/cypher-shell -u neo4j -p <password>
+* cypher connection `cypher-shell -u neo4j -p cuelogic`
+* get all data `Match (n)-[r]->(m) Return n,r,m;`

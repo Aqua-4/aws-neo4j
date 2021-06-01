@@ -22,7 +22,7 @@ frameworkVersion: "2"
 
 provider:
   name: aws
-  runtime: java8
+  runtime: nodejs12.x
   # you can overwrite defaults here
   lambdaHashingVersion: "20201221"
   stage: dev
@@ -42,12 +42,17 @@ provider:
 #    variable1: value1
 
 # you can add packaging information here
-package:
-  artifact: "target/${self:service}-${self:provider.stage}.jar"
+# package:
+#   artifact: "target/${self:service}-${self:provider.stage}.jar"
 
 functions:
   hello:
-    handler: com.serverless.Handler
+    handler: handler.hello
+    events:
+     - httpApi:
+         path: /hello
+         method: get
+
 
 resources:
   Resources:
@@ -235,6 +240,10 @@ resources:
             IpProtocol: TCP
             FromPort: 22
             ToPort: 22
+          - CidrIp: 103.124.143.4/32
+            IpProtocol: TCP
+            FromPort: 7687
+            ToPort: 7687
         SecurityGroupEgress:
           - CidrIp: 0.0.0.0/0
             IpProtocol: All
