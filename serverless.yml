@@ -1,0 +1,323 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: aws-neo4j
+# app and org for use with dashboard.serverless.com
+#app: your-app-name
+#org: your-org-name
+
+# You can pin your service to only deploy with a specific Serverless version
+# Check out our docs for more details
+frameworkVersion: "2"
+
+provider:
+  name: aws
+  runtime: java8
+  # you can overwrite defaults here
+  lambdaHashingVersion: "20201221"
+  stage: dev
+  region: ap-south-1
+  vpc:
+    securityGroupIds:
+      - Ref: LambdaSecurityGroup
+      # - Ref: EcSecurityGroup
+    subnetIds:
+      - Ref: PublicSubnet1
+      - Ref: PublicSubnet2
+      - Ref: PrivateSubnet1
+      - Ref: PrivateSubnet2
+
+# you can define service wide environment variables here
+#  environment:
+#    variable1: value1
+
+# you can add packaging information here
+package:
+  artifact: "target/${self:service}-${self:provider.stage}.jar"
+
+functions:
+  hello:
+    handler: com.serverless.Handler
+
+resources:
+  Resources:
+    Vpc:
+      Type: AWS::EC2::VPC
+      Properties:
+        CidrBlock: 10.0.0.0/16
+        Tags:
+          - Key: Name
+            Value: neo4j-vpc-${self:provider.stage}
+
+    PrivateSubnet1:
+      Type: AWS::EC2::Subnet
+      Properties:
+        AvailabilityZone: ${self:provider.region}a
+        CidrBlock: 10.0.1.0/24
+        VpcId:
+          Ref: Vpc
+        Tags:
+          - Key: Name
+            Value: PrivateSubnet1-${self:provider.stage}
+    PrivateSubnet2:
+      Type: AWS::EC2::Subnet
+      Properties:
+        AvailabilityZone: ${self:provider.region}b
+        CidrBlock: 10.0.2.0/24
+        VpcId:
+          Ref: Vpc
+        Tags:
+          - Key: Name
+            Value: PrivateSubnet2-${self:provider.stage}
+
+    PublicSubnet1:
+      Type: AWS::EC2::Subnet
+      Properties:
+        AvailabilityZone: ${self:provider.region}a
+        CidrBlock: 10.0.3.0/24
+        VpcId:
+          Ref: Vpc
+        Tags:
+          - Key: Name
+            Value: PublicSubnet1-${self:provider.stage}
+
+    PublicSubnet2:
+      Type: AWS::EC2::Subnet
+      Properties:
+        AvailabilityZone: ${self:provider.region}b
+        CidrBlock: 10.0.4.0/24
+        VpcId:
+          Ref: Vpc
+        Tags:
+          - Key: Name
+            Value: PublicSubnet2-${self:provider.stage}
+
+    DbSubnetGroup:
+      Type: AWS::RDS::DBSubnetGroup
+      Properties:
+        DBSubnetGroupName: db-${self:service}-${self:provider.stage}
+        DBSubnetGroupDescription: Private database subnet group
+        SubnetIds:
+          - Ref: PrivateSubnet1
+          - Ref: PrivateSubnet2
+
+    # # Private Route
+    # NatGateway:
+    #   Type: AWS::EC2::NatGateway
+    #   Properties:
+    #     AllocationId:
+    #       Fn::GetAtt:
+    #         - AllocationId
+    #     SubnetId:
+    #       Ref: PublicSubnet1
+    #     Tags:
+    #       - Key: Name
+    #         Value: ngw-${self:service}-${self:provider.stage}
+
+    # PrivateRouteTable:
+    #   Type: AWS::EC2::RouteTable
+    #   Properties:
+    #     VpcId:
+    #       Ref: Vpc
+    #     Tags:
+    #       - Key: Name
+    #         Value: PrivateRouteTable-${self:provider.stage}
+
+    # PrivateRoute:
+    #   Type: AWS::EC2::Route
+    #   Properties:
+    #     RouteTableId:
+    #       Ref: PrivateRouteTable
+    #     DestinationCidrBlock: 0.0.0.0/0
+    #     NatGatewayId:
+    #       Ref: NatGateway
+
+    # SubnetRouteTableAssociationPrivate1:
+    #   Type: AWS::EC2::SubnetRouteTableAssociation
+    #   Properties:
+    #     SubnetId:
+    #       Ref: PrivateSubnet1
+    #     RouteTableId:
+    #       Ref: PrivateRouteTable
+    # SubnetRouteTableAssociationPrivate2:
+    #   Type: AWS::EC2::SubnetRouteTableAssociation
+    #   Properties:
+    #     SubnetId:
+    #       Ref: PrivateSubnet2
+    #     RouteTableId:
+    #       Ref: PrivateRouteTable
+
+    # Public Route
+    InternetGateway:
+      Type: AWS::EC2::InternetGateway
+      Properties:
+        Tags:
+          - Key: Name
+            Value: igw-${self:service}-${self:provider.stage}
+    VPCGatewayAttachment:
+      Type: AWS::EC2::VPCGatewayAttachment
+      Properties:
+        VpcId:
+          Ref: Vpc
+        InternetGatewayId:
+          Ref: InternetGateway
+
+    PublicRouteTable:
+      Type: AWS::EC2::RouteTable
+      DependsOn: InternetGateway
+      Properties:
+        VpcId:
+          Ref: Vpc
+        Tags:
+          - Key: Name
+            Value: PublicRouteTable-${self:provider.stage}
+
+    PublicRoute:
+      Type: AWS::EC2::Route
+      Properties:
+        RouteTableId:
+          Ref: PublicRouteTable
+        DestinationCidrBlock: 0.0.0.0/0
+        GatewayId:
+          Ref: InternetGateway
+    SubnetRouteTableAssociationPublic1:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId:
+          Ref: PublicSubnet1
+        RouteTableId:
+          Ref: PublicRouteTable
+    SubnetRouteTableAssociationPublic2:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId:
+          Ref: PublicSubnet2
+        RouteTableId:
+          Ref: PublicRouteTable
+
+    LambdaSecurityGroup:
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupName: lambda-${self:service}-${self:provider.stage}
+        GroupDescription: Allow outbound traffic to http & mysql, no inbound
+        # SecurityGroupIngress:
+        #   - IpProtocol: -1
+        #     CidrIp: 127.0.0.1/32
+        SecurityGroupEgress:
+          - IpProtocol: TCP
+            CidrIp: 0.0.0.0/0
+            FromPort: 80
+            ToPort: 80
+          - IpProtocol: TCP
+            CidrIp: 0.0.0.0/0
+            FromPort: 3306
+            ToPort: 3306
+        VpcId:
+          Ref: Vpc
+
+    SshSecurityGroup:
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupName: ssh-legion-${self:provider.stage}
+        GroupDescription: ssh from home, this group will accept ssh only from my ip
+        SecurityGroupIngress:
+          - CidrIp: 103.124.143.4/32
+            IpProtocol: TCP
+            FromPort: 22
+            ToPort: 22
+        SecurityGroupEgress:
+          - CidrIp: 0.0.0.0/0
+            IpProtocol: All
+        VpcId:
+          Ref: Vpc
+
+    NeoInstance:
+      Type: AWS::EC2::Instance
+      Properties:
+        InstanceType: t2.micro
+        ImageId: ami-010aff33ed5991201
+        KeyName: legion-mumbai
+        NetworkInterfaces:
+          - AssociatePublicIpAddress: true
+            DeviceIndex: "0"
+            SubnetId:
+              Ref: PublicSubnet1
+            GroupSet:
+              - Ref: SshSecurityGroup
+          # Fn::Base64: ${file(startup.sh)}
+        UserData:
+          Fn::Base64:
+            !Sub |
+              #!/bin/bash 
+
+              date >> /home/ec2-user/tmp.txt
+              # str8 from the neo4j docs
+              sudo rpm --import https://debian.neo4j.com/neotechnology.gpg.key
+              sudo cat <<EOF >  /etc/yum.repos.d/neo4j.repo
+              [neo4j]
+              name=Neo4j RPM Repository
+              baseurl=https://yum.neo4j.com/stable
+              enabled=1
+              gpgcheck=1
+              EOF
+
+              sudo amazon-linux-extras enable java-openjdk11
+
+              # install java
+              sudo yum install java-11-openjdk -y
+              # install adapter
+              sudo yum install https://dist.neo4j.org/neo4j-java11-adapter.noarch.rpm -y
+              # install neo4j
+              sudo yum install neo4j-4.2.6 -y
+              # get version
+              rpm -qa | grep neo
+
+              sudo neo4j-admin set-initial-password cuelogic
+
+              sudo neo4j start
+        Tags:
+          - Key: Name
+            Value: NeoInstance
+
+
+    # NeoSecurityGroup:
+    #   Type: AWS::EC2::SecurityGroup
+    #   Properties:
+    #     GroupName: jump-server-${self:provider.stage}
+    #     GroupDescription: ssh from jmp server
+    #     SecurityGroupIngress:
+    #       - CidrIp: 13.235.31.5/32
+    #         IpProtocol: TCP
+    #         FromPort: 22
+    #         ToPort: 22
+    #     SecurityGroupEgress:
+    #       - CidrIp: 0.0.0.0/0
+    #         IpProtocol: All
+    #     VpcId:
+    #       Ref: Vpc
+    # JumpServer:
+    #   Type: AWS::EC2::Instance
+    #   Properties:
+    #     InstanceType: t2.micro
+    #     ImageId: ami-010aff33ed5991201
+    #     KeyName: legion-mumbai
+    #     NetworkInterfaces:
+    #       - AssociatePublicIpAddress: true
+    #         DeviceIndex: "0"
+    #         SubnetId:
+    #           Ref: PublicSubnet1
+    #         GroupSet:
+    #           - Ref: SshSecurityGroup
+    #     Tags:
+    #       - Key: Name
+    #         Value: JumpServer
