@@ -1,8 +1,10 @@
 TODO:
 
-- [ ] create neo4j ec2 instance (use bash script to setup the env) 
+- [x] create neo4j ec2 instance
+  - [ ]  (use bash script to setup the env) 
 - [ ] put it on a private vpc
-- [ ] lambda function to query 
+- [ ] lambda function to query
+  - [ ] connect with neo4j 
 
 # Neo4j 
 * cypher connection `cypher-shell -u neo4j -p cuelogic`
@@ -11,7 +13,7 @@ TODO:
 
 ## error & settings
 
-1. `$NEO4J_HOME/conf/neo4j.conf` To have Bolt accept non-local connections, uncomment this line::
+1. `sudo nano /etc/neo4j/neo4j.conf` To have Bolt accept non-local connections, uncomment this line::
    * dbms.connector.bolt.address=0.0.0.0:7687
 
 

@@ -22,6 +22,9 @@ sudo yum install neo4j-4.2.6 -y
 # get version
 rpm -qa | grep neo
 
+# To have Bolt accept non-local connections, uncomment this line
+sudo echo 'dbms.default_listen_address=0.0.0.0' >> /etc/neo4j/neo4j.conf
+
 sudo neo4j-admin set-initial-password cuelogic
 
 sudo neo4j start

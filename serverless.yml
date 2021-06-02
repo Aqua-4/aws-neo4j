@@ -38,8 +38,12 @@ provider:
       - Ref: PrivateSubnet2
 
 # you can define service wide environment variables here
-#  environment:
-#    variable1: value1
+  # environment:
+  #   neo_ip: 
+  #     DependsOn: NeoInstance
+  #     Fn::GetAtt:
+  #       NeoInstance.PrivateIp
+       
 
 # you can add packaging information here
 # package:
@@ -48,10 +52,11 @@ provider:
 functions:
   hello:
     handler: handler.hello
+    # timeout: 10
     events:
      - httpApi:
-         path: /hello
-         method: get
+        path: /hello
+        method: get
 
 
 resources:
@@ -215,9 +220,11 @@ resources:
       Properties:
         GroupName: lambda-${self:service}-${self:provider.stage}
         GroupDescription: Allow outbound traffic to http & mysql, no inbound
-        # SecurityGroupIngress:
-        #   - IpProtocol: -1
-        #     CidrIp: 127.0.0.1/32
+        SecurityGroupIngress:
+          - IpProtocol: TCP
+            CidrIp: 0.0.0.0/0
+            FromPort: 7687
+            ToPort: 7687
         SecurityGroupEgress:
           - IpProtocol: TCP
             CidrIp: 0.0.0.0/0
@@ -225,8 +232,8 @@ resources:
             ToPort: 80
           - IpProtocol: TCP
             CidrIp: 0.0.0.0/0
-            FromPort: 3306
-            ToPort: 3306
+            FromPort: 7687
+            ToPort: 7687
         VpcId:
           Ref: Vpc
 
@@ -291,12 +298,19 @@ resources:
               # get version
               rpm -qa | grep neo
 
+              # To have Bolt accept non-local connections, uncomment this line
+              sudo echo 'dbms.default_listen_address=0.0.0.0' >> /etc/neo4j/neo4j.conf
+
               sudo neo4j-admin set-initial-password cuelogic
 
               sudo neo4j start
+
         Tags:
-          - Key: Name
-            Value: NeoInstance
+        - Key: Name
+          Value: NeoInstance
+        # Outputs:
+        #   PublicIp:
+        #     Value : { "Fn::GetAtt" : [ "Server", "PublicIp" ]}
 
 
     # NeoSecurityGroup:
