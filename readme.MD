@@ -4,6 +4,19 @@ TODO:
 - [ ] put it on a private vpc
 - [ ] lambda function to query 
 
-
+# Neo4j 
 * cypher connection `cypher-shell -u neo4j -p cuelogic`
 * get all data `Match (n)-[r]->(m) Return n,r,m;`
+* delete all data `MATCH (n) DETACH DELETE n`
+
+## error & settings
+
+1. `$NEO4J_HOME/conf/neo4j.conf` To have Bolt accept non-local connections, uncomment this line::
+   * dbms.connector.bolt.address=0.0.0.0:7687
+
+
+
+MERGE (a:Person {name:"alpha",age:1}) 
+MERGE (b:Person {name:"beta",age:2})
+CREATE  (a)-[rel:KNOWS]->(b) 
+RETURN a, b, rel
