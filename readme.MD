@@ -22,3 +22,6 @@ MERGE (a:Person {name:"alpha",age:1})
 MERGE (b:Person {name:"beta",age:2})
 CREATE  (a)-[rel:KNOWS]->(b) 
 RETURN a, b, rel
+
+MATCH (p:Person {name: "alpha"})-[r]-(n)
+RETURN p,r,n;
