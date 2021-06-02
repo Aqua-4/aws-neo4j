@@ -16,13 +16,14 @@ module.exports.hello = async (event) => {
     'RETURN p_a, p_b, r'
   ]
 
-  var params = {
+  var def_params = {
     name_a: 'Alice',
     age_a: 33,
     name_b: 'Bob',
     age_b: 44
   }
 
+  var params = event.userdata || def_params
 
   var promiseSession = driver.session({ database: 'neo4j' })
 

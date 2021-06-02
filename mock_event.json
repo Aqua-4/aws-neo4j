@@ -1,0 +1,9 @@
+{
+  "userdata": {
+    "name_a": "alpha",
+    "age_a": 33,
+    "name_b": "beta",
+    "age_b": 44,
+    "relation": "KNOWS"
+  }
+}
