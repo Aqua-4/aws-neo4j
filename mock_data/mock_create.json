@@ -1,0 +1,7 @@
+{
+  "type": "node",
+  "userdata": {
+    "name": "alpha",
+    "age": 33
+  }
+}
