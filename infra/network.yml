@@ -1,0 +1,196 @@
+Resources:
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      Tags:
+        - Key: Name
+          Value: neo4j-vpc-${self:provider.stage}
+
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: ${self:provider.region}a
+      CidrBlock: 10.0.1.0/24
+      VpcId:
+        Ref: Vpc
+      Tags:
+        - Key: Name
+          Value: PrivateSubnet1-${self:provider.stage}
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: ${self:provider.region}b
+      CidrBlock: 10.0.2.0/24
+      VpcId:
+        Ref: Vpc
+      Tags:
+        - Key: Name
+          Value: PrivateSubnet2-${self:provider.stage}
+
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: ${self:provider.region}a
+      CidrBlock: 10.0.3.0/24
+      VpcId:
+        Ref: Vpc
+      Tags:
+        - Key: Name
+          Value: PublicSubnet1-${self:provider.stage}
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: ${self:provider.region}b
+      CidrBlock: 10.0.4.0/24
+      VpcId:
+        Ref: Vpc
+      Tags:
+        - Key: Name
+          Value: PublicSubnet2-${self:provider.stage}
+
+  DbSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupName: db-${self:service}-${self:provider.stage}
+      DBSubnetGroupDescription: Private database subnet group
+      SubnetIds:
+        - Ref: PrivateSubnet1
+        - Ref: PrivateSubnet2
+
+  # # Private Route
+  # NatGateway:
+  #   Type: AWS::EC2::NatGateway
+  #   Properties:
+  #     AllocationId:
+  #       Fn::GetAtt:
+  #         - AllocationId
+  #     SubnetId:
+  #       Ref: PublicSubnet1
+  #     Tags:
+  #       - Key: Name
+  #         Value: ngw-${self:service}-${self:provider.stage}
+
+  # PrivateRouteTable:
+  #   Type: AWS::EC2::RouteTable
+  #   Properties:
+  #     VpcId:
+  #       Ref: Vpc
+  #     Tags:
+  #       - Key: Name
+  #         Value: PrivateRouteTable-${self:provider.stage}
+
+  # PrivateRoute:
+  #   Type: AWS::EC2::Route
+  #   Properties:
+  #     RouteTableId:
+  #       Ref: PrivateRouteTable
+  #     DestinationCidrBlock: 0.0.0.0/0
+  #     NatGatewayId:
+  #       Ref: NatGateway
+
+  # SubnetRouteTableAssociationPrivate1:
+  #   Type: AWS::EC2::SubnetRouteTableAssociation
+  #   Properties:
+  #     SubnetId:
+  #       Ref: PrivateSubnet1
+  #     RouteTableId:
+  #       Ref: PrivateRouteTable
+  # SubnetRouteTableAssociationPrivate2:
+  #   Type: AWS::EC2::SubnetRouteTableAssociation
+  #   Properties:
+  #     SubnetId:
+  #       Ref: PrivateSubnet2
+  #     RouteTableId:
+  #       Ref: PrivateRouteTable
+
+  # Public Route
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: igw-${self:service}-${self:provider.stage}
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId:
+        Ref: Vpc
+      InternetGatewayId:
+        Ref: InternetGateway
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    DependsOn: InternetGateway
+    Properties:
+      VpcId:
+        Ref: Vpc
+      Tags:
+        - Key: Name
+          Value: PublicRouteTable-${self:provider.stage}
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId:
+        Ref: PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:
+        Ref: InternetGateway
+  SubnetRouteTableAssociationPublic1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Ref: PublicSubnet1
+      RouteTableId:
+        Ref: PublicRouteTable
+  SubnetRouteTableAssociationPublic2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Ref: PublicSubnet2
+      RouteTableId:
+        Ref: PublicRouteTable
+
+  LambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: lambda-${self:service}-${self:provider.stage}
+      GroupDescription: Allow outbound traffic to http & mysql, no inbound
+      SecurityGroupIngress:
+        - IpProtocol: TCP
+          CidrIp: 0.0.0.0/0
+          FromPort: 7687
+          ToPort: 7687
+      SecurityGroupEgress:
+        - IpProtocol: TCP
+          CidrIp: 0.0.0.0/0
+          FromPort: 80
+          ToPort: 80
+        - IpProtocol: TCP
+          CidrIp: 0.0.0.0/0
+          FromPort: 7687
+          ToPort: 7687
+      VpcId:
+        Ref: Vpc
+
+  SshSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: ssh-legion-${self:provider.stage}
+      GroupDescription: ssh from home, this group will accept ssh only from my ip
+      SecurityGroupIngress:
+        - CidrIp: 103.124.143.4/32
+          IpProtocol: TCP
+          FromPort: 22
+          ToPort: 22
+        - CidrIp: 103.124.143.4/32
+          IpProtocol: TCP
+          FromPort: 7687
+          ToPort: 7687
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: All
+      VpcId:
+        Ref: Vpc

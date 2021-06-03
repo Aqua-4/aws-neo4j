@@ -3,7 +3,7 @@
 const neo4j = require('neo4j-driver')
 
 var driver = neo4j.driver(
-  'bolt://35.154.128.63',
+  'bolt://13.235.254.32',
   neo4j.auth.basic('neo4j', 'cuelogic')
 )
 
