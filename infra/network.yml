@@ -50,15 +50,6 @@ Resources:
         - Key: Name
           Value: PublicSubnet2-${self:provider.stage}
 
-  DbSubnetGroup:
-    Type: AWS::RDS::DBSubnetGroup
-    Properties:
-      DBSubnetGroupName: db-${self:service}-${self:provider.stage}
-      DBSubnetGroupDescription: Private database subnet group
-      SubnetIds:
-        - Ref: PrivateSubnet1
-        - Ref: PrivateSubnet2
-
   # # Private Route
   # NatGateway:
   #   Type: AWS::EC2::NatGateway

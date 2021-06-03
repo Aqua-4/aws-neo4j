@@ -33,16 +33,17 @@ provider:
       # - Ref: EcSecurityGroup
     subnetIds:
       - Ref: PublicSubnet1
-      - Ref: PublicSubnet2
-      - Ref: PrivateSubnet1
-      - Ref: PrivateSubnet2
+      # - Ref: PublicSubnet2
+      # - Ref: PrivateSubnet1
+      # - Ref: PrivateSubnet2
 
 # you can define service wide environment variables here
-# environment:
-#   neo_ip:
-#     DependsOn: NeoInstance
-#     Fn::GetAtt:
-#       NeoInstance.PrivateIp
+  # environment:
+  #   neo_ip:
+  #     Fn::GetAtt: [NeoInstance.PrivateIp]
+  #   DependsOn: NeoInstance
+  #   Fn::GetAtt:
+  #     NeoInstance.PrivateIp
 
 # you can add packaging information here
 # package:

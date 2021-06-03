@@ -3,8 +3,18 @@ TODO:
 - [x] create neo4j ec2 instance
   - [ ]  (use bash script to setup the env) 
 - [ ] put it on a private vpc
-- [ ] lambda function to query
-  - [ ] connect with neo4j 
+- [x] lambda function to query
+  - [x] connect with neo4j 
+
+--------
+
+
+- [ ] get server IP using variables
+- [ ] dir structure
+  - [x] split resources to compute,network,storage
+  - [ ] node folder structure
+- [ ] API structure
+
 
 # Neo4j 
 * cypher connection `cypher-shell -u neo4j -p cuelogic`
@@ -25,3 +35,5 @@ RETURN a, b, rel
 
 MATCH (p:Person {name: "alpha"})-[r]-(n)
 RETURN p,r,n;
+
+
