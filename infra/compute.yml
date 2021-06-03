@@ -6,12 +6,11 @@ Resources:
       ImageId: ami-010aff33ed5991201
       KeyName: legion-mumbai
       NetworkInterfaces:
-        - AssociatePublicIpAddress: true
-          DeviceIndex: "0"
+        - DeviceIndex: "0"
           SubnetId:
-            Ref: PublicSubnet1
+            Ref: PrivateSubnet1
           GroupSet:
-            - Ref: SshSecurityGroup
+            - Ref: SshPrivateGroup
         # Fn::Base64: ${file(startup.sh)}
       UserData:
         Fn::Base64: !Sub |
@@ -67,19 +66,19 @@ Resources:
   #         IpProtocol: All
   #     VpcId:
   #       Ref: Vpc
-  # JumpServer:
-  #   Type: AWS::EC2::Instance
-  #   Properties:
-  #     InstanceType: t2.micro
-  #     ImageId: ami-010aff33ed5991201
-  #     KeyName: legion-mumbai
-  #     NetworkInterfaces:
-  #       - AssociatePublicIpAddress: true
-  #         DeviceIndex: "0"
-  #         SubnetId:
-  #           Ref: PublicSubnet1
-  #         GroupSet:
-  #           - Ref: SshSecurityGroup
-  #     Tags:
-  #       - Key: Name
-  #         Value: JumpServer
+  JumpServer:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-010aff33ed5991201
+      KeyName: legion-mumbai
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: "0"
+          SubnetId:
+            Ref: PublicSubnet1
+          GroupSet:
+            - Ref: SshLegionGroup
+      Tags:
+        - Key: Name
+          Value: JumpServer

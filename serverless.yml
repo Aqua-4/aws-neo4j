@@ -13,12 +13,15 @@
 
 service: aws-neo4j
 # app and org for use with dashboard.serverless.com
-#app: your-app-name
-#org: your-org-name
+app: aws-neo4j
+org: parashar
 
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
 frameworkVersion: "2"
+
+# plugins:
+#   - serverless-stack-output
 
 provider:
   name: aws
@@ -37,13 +40,15 @@ provider:
       # - Ref: PrivateSubnet1
       # - Ref: PrivateSubnet2
 
-# you can define service wide environment variables here
+  # you can define service wide environment variables here
   # environment:
+  #   # neo_ip: ${cf:NeoOutput.value}
+  #   # neo_ip: !ImportValue ${self:provider.stage}-NeoOutput
   #   neo_ip:
-  #     Fn::GetAtt: [NeoInstance.PrivateIp]
-  #   DependsOn: NeoInstance
-  #   Fn::GetAtt:
-  #     NeoInstance.PrivateIp
+  #     Fn::ImportValue: ${self:provider.stage}-NeoIp
+  # DependsOn: NeoInstance
+  # Fn::GetAtt:
+  #   NeoInstance.PrivateIp
 
 # you can add packaging information here
 # package:
@@ -57,36 +62,54 @@ functions:
       - httpApi:
           path: /insert
           method: get
-  create:
-    handler: handler.create
-    # timeout: 10
-    events:
-      - httpApi:
-          path: /create
-          method: get
-  read:
-    handler: handler.read
-    # timeout: 10
-    events:
-      - httpApi:
-          path: /read
-          method: get
-  update:
-    handler: handler.update
-    # timeout: 10
-    events:
-      - httpApi:
-          path: /update
-          method: get
-  delete:
-    handler: handler.delete
-    # timeout: 10
-    events:
-      - httpApi:
-          path: /delete
-          method: get
+  # create:
+  #   handler: handler.create
+  #   # timeout: 10
+  #   events:
+  #     - httpApi:
+  #         path: /create
+  #         method: get
+  # read:
+  #   handler: handler.read
+  #   # timeout: 10
+  #   events:
+  #     - httpApi:
+  #         path: /read
+  #         method: get
+  # update:
+  #   handler: handler.update
+  #   # timeout: 10
+  #   events:
+  #     - httpApi:
+  #         path: /update
+  #         method: get
+  # delete:
+  #   handler: handler.delete
+  #   # timeout: 10
+  #   events:
+  #     - httpApi:
+  #         path: /delete
+  #         method: get
 
 resources:
   - ${file(./infra/network.yml)}
   - ${file(./infra/compute.yml)}
   # - ${file(./infra/storage.yml)}
+  # resources:
+  #   Resources:
+
+  - Outputs:
+      NeoOutput:
+        Description: private IP of neoDb-ec2 instance
+        Value:
+          Fn::GetAtt:
+            - NeoInstance
+            - PrivateIp
+        Export:
+          Name: ${self:service}-${self:provider.stage}-NeoIp
+          # !GetAtt NeoInstance.PrivateIp
+# custom:
+#   exportOutputs:
+#     reactapp: true
+
+# https://serverless-stack.com/chapters/cross-stack-references-in-serverless.html

@@ -50,51 +50,58 @@ Resources:
         - Key: Name
           Value: PublicSubnet2-${self:provider.stage}
 
-  # # Private Route
-  # NatGateway:
-  #   Type: AWS::EC2::NatGateway
-  #   Properties:
-  #     AllocationId:
-  #       Fn::GetAtt:
-  #         - AllocationId
-  #     SubnetId:
-  #       Ref: PublicSubnet1
-  #     Tags:
-  #       - Key: Name
-  #         Value: ngw-${self:service}-${self:provider.stage}
+  # Private Route
+  Eip:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
 
-  # PrivateRouteTable:
-  #   Type: AWS::EC2::RouteTable
-  #   Properties:
-  #     VpcId:
-  #       Ref: Vpc
-  #     Tags:
-  #       - Key: Name
-  #         Value: PrivateRouteTable-${self:provider.stage}
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId:
+        Fn::GetAtt:
+          - Eip
+          - AllocationId
+      SubnetId:
+        Ref: PublicSubnet1
+      Tags:
+        - Key: Name
+          Value: ngw-${self:service}-${self:provider.stage}
 
-  # PrivateRoute:
-  #   Type: AWS::EC2::Route
-  #   Properties:
-  #     RouteTableId:
-  #       Ref: PrivateRouteTable
-  #     DestinationCidrBlock: 0.0.0.0/0
-  #     NatGatewayId:
-  #       Ref: NatGateway
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: Vpc
+      Tags:
+        - Key: Name
+          Value: PrivateRouteTable-${self:provider.stage}
 
-  # SubnetRouteTableAssociationPrivate1:
-  #   Type: AWS::EC2::SubnetRouteTableAssociation
-  #   Properties:
-  #     SubnetId:
-  #       Ref: PrivateSubnet1
-  #     RouteTableId:
-  #       Ref: PrivateRouteTable
-  # SubnetRouteTableAssociationPrivate2:
-  #   Type: AWS::EC2::SubnetRouteTableAssociation
-  #   Properties:
-  #     SubnetId:
-  #       Ref: PrivateSubnet2
-  #     RouteTableId:
-  #       Ref: PrivateRouteTable
+  # default route is added - add this block only for NAT
+  PrivateRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId:
+        Ref: PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId:
+        Ref: NatGateway
+
+  SubnetRouteTableAssociationPrivate1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Ref: PrivateSubnet1
+      RouteTableId:
+        Ref: PrivateRouteTable
+  SubnetRouteTableAssociationPrivate2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Ref: PrivateSubnet2
+      RouteTableId:
+        Ref: PrivateRouteTable
 
   # Public Route
   InternetGateway:
@@ -166,17 +173,37 @@ Resources:
       VpcId:
         Ref: Vpc
 
-  SshSecurityGroup:
+  SshLegionGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupName: ssh-legion-${self:provider.stage}
       GroupDescription: ssh from home, this group will accept ssh only from my ip
       SecurityGroupIngress:
-        - CidrIp: 103.124.143.4/32
+        - CidrIp: 103.124.143.6/32
           IpProtocol: TCP
           FromPort: 22
           ToPort: 22
-        - CidrIp: 103.124.143.4/32
+        - CidrIp: 103.124.143.6/32
+          IpProtocol: TCP
+          FromPort: 7687
+          ToPort: 7687
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: All
+      VpcId:
+        Ref: Vpc
+
+  SshPrivateGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: ssh-private-${self:provider.stage}
+      GroupDescription: ssh from jump server to private subnet
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: TCP
+          FromPort: 22
+          ToPort: 22
+        - CidrIp: 0.0.0.0/0
           IpProtocol: TCP
           FromPort: 7687
           ToPort: 7687
