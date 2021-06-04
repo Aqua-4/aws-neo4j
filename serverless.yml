@@ -20,9 +20,6 @@ org: parashar
 # Check out our docs for more details
 frameworkVersion: "2"
 
-# plugins:
-#   - serverless-stack-output
-
 provider:
   name: aws
   runtime: nodejs12.x
@@ -44,7 +41,7 @@ provider:
   # you can define service wide environment variables here
   environment:
     NeoIp:
-      Fn::GetAtt: 
+      Fn::GetAtt:
         - NeoInstance
         - PrivateIp
 
@@ -52,9 +49,10 @@ provider:
 # package:
 #   artifact: "target/${self:service}-${self:provider.stage}.jar"
 
+# define a format with prefix as entity & stage
 functions:
   insert:
-    handler: handler.insert
+    handler: handlers/person/insert.insert
     # timeout: 10
     events:
       - httpApi:
@@ -106,8 +104,3 @@ resources:
         Export:
           Name: ${self:service}-${self:provider.stage}-NeoIp
           # !GetAtt NeoInstance.PrivateIp
-# custom:
-#   exportOutputs:
-#     reactapp: true
-
-# https://serverless-stack.com/chapters/cross-stack-references-in-serverless.html
