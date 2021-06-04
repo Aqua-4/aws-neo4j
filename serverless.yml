@@ -30,6 +30,7 @@ provider:
   lambdaHashingVersion: "20201221"
   stage: dev
   region: ap-south-1
+  stackName: ${self:service}-${self:provider.stage}
   vpc:
     securityGroupIds:
       - Ref: LambdaSecurityGroup
@@ -41,14 +42,11 @@ provider:
       # - Ref: PrivateSubnet2
 
   # you can define service wide environment variables here
-  # environment:
-  #   # neo_ip: ${cf:NeoOutput.value}
-  #   # neo_ip: !ImportValue ${self:provider.stage}-NeoOutput
-  #   neo_ip:
-  #     Fn::ImportValue: ${self:provider.stage}-NeoIp
-  # DependsOn: NeoInstance
-  # Fn::GetAtt:
-  #   NeoInstance.PrivateIp
+  environment:
+    NeoIp:
+      Fn::GetAtt: 
+        - NeoInstance
+        - PrivateIp
 
 # you can add packaging information here
 # package:

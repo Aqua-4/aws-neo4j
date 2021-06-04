@@ -2,9 +2,9 @@
 
 const neo4j = require('neo4j-driver')
 
-// console.log(process.env.neo_ip);
+// console.log(process.env.NeoIp);
 var driver = neo4j.driver(
-  'bolt://10.0.1.72', // ec2 IP private
+  `bolt://${process.env.NeoIp}`, // ec2 IP private
   neo4j.auth.basic('neo4j', 'cuelogic')
 )
 

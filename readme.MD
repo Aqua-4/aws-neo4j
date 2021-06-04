@@ -1,20 +1,20 @@
 TODO:
 
 - [x] create neo4j ec2 instance
-  - [ ]  (use bash script to setup the env) 
-- [ ] put it on a private vpc
+  - [x]  (use bash script to setup the env) 
+- [x] put it on a private vpc
 - [x] lambda function to query
   - [x] connect with neo4j 
 
 --------
 
 
-- [ ] get server IP using variables
+- [x] get server IP using variables
 - [ ] dir structure
   - [x] split resources to compute,network,storage
   - [ ] node folder structure
 - [ ] API structure
-
+- use `https://www.npmjs.com/package/dotenv`
 
 # Neo4j 
 * cypher connection `cypher-shell -u neo4j -p cuelogic`
